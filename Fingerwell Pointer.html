@@ -1,0 +1,359 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Fingerwell Pointer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: concept-sheet — big orbitable model left, instrument column right (top view, screen, spec) */
+:root{
+  --bg:#eef0f3; --panel:#ffffff; --ink:#1b2029; --muted:#5d6676; --line:#d5d9e0;
+  --signal:#ff6a13; --well:#2a303a; --grid:#e3e6eb;
+  --display:"Space Grotesk",system-ui,sans-serif;
+  --body:"Inter",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#13161b; --panel:#1b1f26; --ink:#e7eaef; --muted:#97a0ae; --line:#2c323c;
+  --signal:#ff7a2b; --well:#0c0e12; --grid:#232831; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#13161b; --panel:#1b1f26; --ink:#e7eaef; --muted:#97a0ae; --line:#2c323c;
+  --signal:#ff7a2b; --well:#0c0e12; --grid:#232831; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 40px}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+header{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:8px 24px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(1.8rem,4vw,2.6rem);letter-spacing:-.02em;margin:0;text-wrap:balance}
+h1 span{color:var(--signal)}
+.lede{color:var(--muted);max-width:60ch;margin:0}
+.tag{font-family:var(--mono);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.grid{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:20px}
+@media (max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}}
+.stage{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:6px;overflow:hidden;min-height:420px;aspect-ratio:4/3;max-width:100%}
+.stage canvas{display:block;width:100%;height:100%;touch-action:none;cursor:grab}
+.stage .hint{position:absolute;left:12px;bottom:10px;font-family:var(--mono);font-size:.72rem;color:var(--muted);pointer-events:none}
+.col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.card h2{font-family:var(--display);font-size:1rem;font-weight:500;margin:0;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.card h2 small{font-family:var(--mono);font-size:.7rem;color:var(--muted);font-weight:400;letter-spacing:.06em;text-transform:uppercase}
+#pad{width:100%;max-width:240px;aspect-ratio:1;align-self:center;touch-action:none;cursor:crosshair;border-radius:50%}
+#pad:focus-visible{outline:2px solid var(--signal);outline-offset:4px}
+#screen{width:100%;aspect-ratio:16/10;border-radius:4px;display:block}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+button{font:500 .8rem var(--body);background:transparent;color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:6px 10px;cursor:pointer}
+button:hover{border-color:var(--muted)}
+button:focus-visible{outline:2px solid var(--signal);outline-offset:2px}
+button[aria-pressed="true"]{border-color:var(--signal);color:var(--signal)}
+.readout{font-family:var(--mono);font-size:.75rem;color:var(--muted);font-variant-numeric:tabular-nums}
+dl{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:0;font-size:.85rem}
+dt{font-family:var(--mono);font-size:.75rem;color:var(--muted);padding-top:2px}
+dd{margin:0}
+.note{font-size:.85rem;color:var(--muted);margin:0}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <div class="tag">Concept sketch · pointing device · rev A</div>
+      <h1>Finger<span>well</span></h1>
+    </div>
+    <p class="lede">A desk puck with a finger-sized hole. Rest a fingertip in the well and lean it against the walls; eight pressure segments read the push and steer the pointer. Press down on the floor to click.</p>
+  </header>
+
+  <div class="grid">
+    <div class="stage" id="stage">
+      <canvas id="three" aria-label="3D model of the Fingerwell device"></canvas>
+      <div class="hint">Drag to orbit · scroll to zoom</div>
+    </div>
+
+    <div class="col">
+      <div class="card">
+        <h2>Steer the finger <small>top view of well</small></h2>
+        <canvas id="pad" tabindex="0" aria-label="Drag to push the finger against the well walls. Arrow keys also work; space clicks."></canvas>
+        <div class="row">
+          <button id="demo" aria-pressed="true">Auto demo</button>
+          <button id="click">Press to click</button>
+          <span class="readout" id="read">Fx +0.00 · Fy +0.00</span>
+        </div>
+      </div>
+      <div class="card">
+        <h2>On screen <small>rate control</small></h2>
+        <canvas id="screen" aria-label="Simulated screen showing the pointer"></canvas>
+        <p class="note">Wall pressure sets pointer speed, like a joystick. Lean harder, move faster; relax and the pointer stops.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Working spec <small>sketch dimensions</small></h2>
+    <dl>
+      <dt>Body</dt><dd>Ø 100 mm puck, 18 mm tall, weighted base, soft-touch shell</dd>
+      <dt>Well</dt><dd>Ø 23 mm, 12 mm deep, sized for an index fingertip with ~3.5 mm play to each wall</dd>
+      <dt>Wall sensors</dt><dd>8 curved force-sensing segments at 45° spacing; force vector = Σ segment pressure × segment normal</dd>
+      <dt>Floor</dt><dd>Domed click switch, ~1.5 N actuation, 0.5 mm travel</dd>
+      <dt>Mapping</dt><dd>Rate control with a small dead zone and a quadratic transfer curve for fine control near centre</dd>
+    </dl>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(function(){
+  const css = () => getComputedStyle(document.documentElement);
+  let C = {};
+  function readColors(){ const s=css(); ['bg','panel','ink','muted','line','signal','well','grid'].forEach(k=>C[k]=s.getPropertyValue('--'+k).trim()); }
+  readColors();
+
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // ---------- state ----------
+  const MAX = 0.36;               // max tip offset (scene units = 10 mm)
+  let off = {x:0,z:0}, target={x:0,z:0}, demo=!reduce, dragging=false, clickT=0, t0=performance.now();
+  let lastInput = 0;
+
+  // ---------- three scene ----------
+  const canvas = document.getElementById('three');
+  const stage = document.getElementById('stage');
+  const renderer = new THREE.WebGLRenderer({canvas, antialias:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(35,4/3,0.1,200);
+  camera.position.set(9,10,12);
+  const controls = new THREE.OrbitControls(camera, canvas);
+  controls.target.set(0,1.2,0); controls.enableDamping=true; controls.minDistance=6; controls.maxDistance=30;
+  controls.maxPolarAngle = Math.PI*0.48;
+
+  scene.add(new THREE.HemisphereLight(0xffffff,0x8890a0,0.65));
+  const key = new THREE.DirectionalLight(0xffffff,0.9);
+  key.position.set(6,14,8); key.castShadow=true; key.shadow.mapSize.set(1024,1024);
+  Object.assign(key.shadow.camera,{left:-10,right:10,top:10,bottom:-10});
+  scene.add(key);
+  const rim = new THREE.DirectionalLight(0xffffff,0.35); rim.position.set(-8,5,-6); scene.add(rim);
+
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(80,80), new THREE.ShadowMaterial({opacity:0.18}));
+  ground.rotation.x=-Math.PI/2; ground.receiveShadow=true; scene.add(ground);
+  const gridH = new THREE.GridHelper(40,40); gridH.material.transparent=true; gridH.material.opacity=0.35; scene.add(gridH);
+
+  // Body: lathe profile with the well cut into the top
+  const prof = [[0,0],[4.5,0],[4.9,0.15],[5,0.45],[4.92,0.9],[4.55,1.35],[3.6,1.68],[2.2,1.8],[1.5,1.8],[1.28,1.74],[1.17,1.6],[1.15,1.45],[1.15,0.62],[1.1,0.55],[0,0.55]]
+    .map(p=>new THREE.Vector2(p[0],p[1]));
+  const body = new THREE.Mesh(new THREE.LatheGeometry(prof,96),
+    new THREE.MeshStandardMaterial({color:0xc6cad1,roughness:0.62,metalness:0.05,side:THREE.DoubleSide}));
+  body.castShadow=true; body.receiveShadow=true; scene.add(body);
+
+  // dark inner liner so the well reads
+  const liner = new THREE.Mesh(new THREE.CylinderGeometry(1.145,1.145,0.9,64,1,true),
+    new THREE.MeshStandardMaterial({color:0x2a2f38,roughness:0.8,side:THREE.BackSide}));
+  liner.position.y=1.08; scene.add(liner);
+
+  // 8 wall sensor segments
+  const SEG=8, segs=[];
+  for(let i=0;i<SEG;i++){
+    const len=2*Math.PI/SEG, c=i*len;
+    const m=new THREE.MeshStandardMaterial({color:0x3a404b,roughness:0.5,emissive:0xff6a13,emissiveIntensity:0,side:THREE.BackSide});
+    const g=new THREE.Mesh(new THREE.CylinderGeometry(1.135,1.135,0.72,16,1,true,c-len/2+0.05,len-0.1),m);
+    g.position.y=1.08; scene.add(g);
+    segs.push({mesh:g,mat:m,dir:{x:Math.sin(c),z:Math.cos(c)},p:0});
+  }
+  // floor click switch
+  const floorMat=new THREE.MeshStandardMaterial({color:0x3a404b,roughness:0.5,emissive:0xff6a13,emissiveIntensity:0});
+  const floor=new THREE.Mesh(new THREE.CylinderGeometry(0.85,0.9,0.06,48),floorMat);
+  floor.position.y=0.585; scene.add(floor);
+
+  // status LED at front
+  const ledMat=new THREE.MeshStandardMaterial({color:0x222222,emissive:0xff6a13,emissiveIntensity:0.6});
+  const led=new THREE.Mesh(new THREE.SphereGeometry(0.09,16,12),ledMat);
+  led.position.set(0,1.5,3.95); scene.add(led);
+
+  // cable out the back
+  const curve=new THREE.CatmullRomCurve3([new THREE.Vector3(0,0.55,-4.9),new THREE.Vector3(0,0.35,-6.5),new THREE.Vector3(0.6,0.15,-9),new THREE.Vector3(2.5,0.15,-13),new THREE.Vector3(3,0.15,-18)]);
+  const cable=new THREE.Mesh(new THREE.TubeGeometry(curve,60,0.17,12),new THREE.MeshStandardMaterial({color:0x30343b,roughness:0.7}));
+  cable.castShadow=true; scene.add(cable);
+  const strain=new THREE.Mesh(new THREE.CylinderGeometry(0.3,0.24,0.8,20),new THREE.MeshStandardMaterial({color:0x30343b,roughness:0.7}));
+  strain.rotation.x=Math.PI/2; strain.position.set(0,0.55,-5.1); scene.add(strain);
+
+  // finger: tip sphere + shaft + knuckle + nail, origin at tip centre, axis along +Y
+  const R=0.72;
+  const skin=new THREE.MeshStandardMaterial({color:0xe2b394,roughness:0.75,transparent:true,opacity:0.92});
+  const finger=new THREE.Group();
+  const tip=new THREE.Mesh(new THREE.SphereGeometry(R,32,20),skin);
+  const shaft1=new THREE.Mesh(new THREE.CylinderGeometry(R*1.04,R,2.6,32),skin); shaft1.position.y=1.3;
+  const k1=new THREE.Mesh(new THREE.SphereGeometry(R*1.06,24,16),skin); k1.position.y=2.6;
+  const shaft2=new THREE.Mesh(new THREE.CylinderGeometry(R*1.1,R*1.06,2.4,32),skin); shaft2.position.y=3.8;
+  const nail=new THREE.Mesh(new THREE.SphereGeometry(R*0.62,20,12,0,Math.PI*2,0,Math.PI/2.4),
+    new THREE.MeshStandardMaterial({color:0xf1d6cb,roughness:0.35}));
+  nail.scale.set(1,0.25,1.5); nail.rotation.x=Math.PI/2; nail.position.set(0,0.75,-R*0.9);
+  [tip,shaft1,k1,shaft2,nail].forEach(m=>{m.castShadow=true;finger.add(m)});
+  scene.add(finger);
+
+  const TIP_Y=0.585+0.03+R+0.04;
+  const up=new THREE.Vector3(0,1,0), axis=new THREE.Vector3(), tmp=new THREE.Vector3();
+
+  function setTheme(){
+    readColors();
+    renderer.setClearColor(new THREE.Color(C.panel));
+    const dark = document.documentElement.getAttribute('data-theme')==='dark' ||
+      (!document.documentElement.getAttribute('data-theme') && matchMedia('(prefers-color-scheme: dark)').matches);
+    gridH.material.color = new THREE.Color(dark?0x3a414d:0xc9ced6);
+    ground.material.opacity = dark?0.35:0.18;
+  }
+  setTheme();
+  matchMedia('(prefers-color-scheme: dark)').addEventListener('change',setTheme);
+  new MutationObserver(setTheme).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+
+  function resize(){
+    const w=stage.clientWidth,h=stage.clientHeight;
+    renderer.setSize(w,h,false); camera.aspect=w/h; camera.updateProjectionMatrix();
+  }
+  new ResizeObserver(resize).observe(stage); resize();
+
+  // ---------- steering pad ----------
+  const pad=document.getElementById('pad'), pctx=pad.getContext('2d');
+  function sizeCanvas(cv){ const r=cv.getBoundingClientRect(), d=Math.min(devicePixelRatio,2); cv.width=Math.round(r.width*d); cv.height=Math.round(r.height*d); return d; }
+  let pd=sizeCanvas(pad);
+  function padToOff(e){
+    const r=pad.getBoundingClientRect();
+    let x=(e.clientX-r.left)/r.width*2-1, y=(e.clientY-r.top)/r.height*2-1;
+    const l=Math.hypot(x,y)/0.8; if(l>1){x/=l;y/=l;}
+    target.x=x/0.8*MAX; target.z=y/0.8*MAX;
+  }
+  pad.addEventListener('pointerdown',e=>{dragging=true;pad.setPointerCapture(e.pointerId);setDemo(false);padToOff(e)});
+  pad.addEventListener('pointermove',e=>{if(dragging)padToOff(e)});
+  const endDrag=()=>{dragging=false;target.x=0;target.z=0};
+  pad.addEventListener('pointerup',endDrag); pad.addEventListener('pointercancel',endDrag);
+  const keys={};
+  pad.addEventListener('keydown',e=>{
+    if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key)){keys[e.key]=1;setDemo(false);e.preventDefault();}
+    if(e.key===' '){doClick();e.preventDefault();}
+  });
+  pad.addEventListener('keyup',e=>{keys[e.key]=0});
+
+  const demoBtn=document.getElementById('demo');
+  function setDemo(v){demo=v;demoBtn.setAttribute('aria-pressed',v);if(!v){target.x=0;target.z=0}}
+  demoBtn.addEventListener('click',()=>setDemo(!demo));
+  function doClick(){clickT=performance.now();ripples.push({x:cur.x,y:cur.y,t:clickT});}
+  document.getElementById('click').addEventListener('click',doClick);
+
+  function drawPad(){
+    const w=pad.width,h=pad.height,cx=w/2,cy=h/2,r=w/2*0.98;
+    pctx.clearRect(0,0,w,h);
+    // body ring
+    pctx.fillStyle=C.grid; pctx.beginPath(); pctx.arc(cx,cy,r,0,7); pctx.fill();
+    // wall segments
+    const wr=r*0.86;
+    segs.forEach((s,i)=>{
+      const c=Math.atan2(s.dir.x,s.dir.z); // angle in pad space: x right, z down
+      const a=Math.atan2(s.dir.z,s.dir.x);
+      pctx.strokeStyle=s.p>0.02?C.signal:C.muted; pctx.globalAlpha=0.35+0.65*Math.min(1,s.p*1.4);
+      pctx.lineWidth=(6+10*s.p)*pd; pctx.lineCap='butt';
+      pctx.beginPath(); pctx.arc(cx,cy,wr,a-Math.PI/8+0.06,a+Math.PI/8-0.06); pctx.stroke();
+    });
+    pctx.globalAlpha=1;
+    // well floor
+    const press=Math.max(0,1-(performance.now()-clickT)/250);
+    pctx.fillStyle=C.well; pctx.beginPath(); pctx.arc(cx,cy,wr-9*pd,0,7); pctx.fill();
+    if(press>0){pctx.fillStyle=C.signal;pctx.globalAlpha=press*0.5;pctx.beginPath();pctx.arc(cx,cy,wr*0.7,0,7);pctx.fill();pctx.globalAlpha=1;}
+    // finger tip (scale: well radius 1.15 -> wr)
+    const s=wr/1.15, fx=cx+off.x*s, fy=cy+off.z*s;
+    pctx.fillStyle='#e2b394'; pctx.beginPath(); pctx.arc(fx,fy,R*s,0,7); pctx.fill();
+    pctx.strokeStyle='rgba(0,0,0,.25)'; pctx.lineWidth=1.5*pd; pctx.stroke();
+    // force arrow
+    const fl=Math.hypot(off.x,off.z);
+    if(fl>0.02){
+      const ax=cx+off.x/MAX*wr*0.95, ay=cy+off.z/MAX*wr*0.95;
+      pctx.strokeStyle=C.ink; pctx.lineWidth=2*pd; pctx.beginPath(); pctx.moveTo(cx,cy); pctx.lineTo(ax,ay); pctx.stroke();
+      const ang=Math.atan2(ay-cy,ax-cx), hl=8*pd;
+      pctx.fillStyle=C.ink; pctx.beginPath(); pctx.moveTo(ax,ay);
+      pctx.lineTo(ax-hl*Math.cos(ang-0.45),ay-hl*Math.sin(ang-0.45)); pctx.lineTo(ax-hl*Math.cos(ang+0.45),ay-hl*Math.sin(ang+0.45)); pctx.fill();
+    }
+    // front marker
+    pctx.fillStyle=C.muted; pctx.font=`${10*pd}px "IBM Plex Mono", monospace`; pctx.textAlign='center';
+    pctx.fillText('FRONT',cx,h-4*pd);
+  }
+
+  // ---------- screen ----------
+  const scr=document.getElementById('screen'), sctx=scr.getContext('2d');
+  let sd=sizeCanvas(scr);
+  const cur={x:0.5,y:0.5}, trail=[], ripples=[];
+  const icons=[[0.14,0.2],[0.14,0.42],[0.14,0.64],[0.78,0.3]];
+  function drawScreen(){
+    const w=scr.width,h=scr.height;
+    sctx.fillStyle=C.well; sctx.fillRect(0,0,w,h);
+    // desktop clutter for scale
+    sctx.fillStyle='rgba(255,255,255,0.06)';
+    sctx.fillRect(w*0.32,h*0.16,w*0.42,h*0.56);
+    sctx.fillStyle='rgba(255,255,255,0.09)'; sctx.fillRect(w*0.32,h*0.16,w*0.42,h*0.07);
+    icons.forEach(([x,y])=>{sctx.fillStyle='rgba(255,255,255,0.12)';sctx.fillRect(w*x-9*sd,h*y-9*sd,18*sd,18*sd)});
+    sctx.fillStyle='rgba(255,255,255,0.08)'; sctx.fillRect(0,h-14*sd,w,14*sd);
+    // trail
+    sctx.strokeStyle=C.signal; sctx.lineWidth=1.5*sd;
+    for(let i=1;i<trail.length;i++){sctx.globalAlpha=i/trail.length*0.6;sctx.beginPath();sctx.moveTo(trail[i-1].x*w,trail[i-1].y*h);sctx.lineTo(trail[i].x*w,trail[i].y*h);sctx.stroke();}
+    sctx.globalAlpha=1;
+    const now=performance.now();
+    for(let i=ripples.length-1;i>=0;i--){const r=ripples[i],k=(now-r.t)/500;if(k>1){ripples.splice(i,1);continue}
+      sctx.strokeStyle=C.signal;sctx.globalAlpha=1-k;sctx.lineWidth=2*sd;sctx.beginPath();sctx.arc(r.x*w,r.y*h,(4+22*k)*sd,0,7);sctx.stroke();}
+    sctx.globalAlpha=1;
+    // arrow cursor
+    const x=cur.x*w,y=cur.y*h,s=sd*1.1;
+    sctx.beginPath(); sctx.moveTo(x,y); sctx.lineTo(x,y+17*s); sctx.lineTo(x+4.5*s,y+13*s); sctx.lineTo(x+7.5*s,y+19.5*s);
+    sctx.lineTo(x+10*s,y+18.5*s); sctx.lineTo(x+7*s,y+12*s); sctx.lineTo(x+12.5*s,y+12*s); sctx.closePath();
+    sctx.fillStyle='#fff'; sctx.fill(); sctx.strokeStyle='#000'; sctx.lineWidth=1.2*sd; sctx.stroke();
+  }
+  addEventListener('resize',()=>{pd=sizeCanvas(pad);sd=sizeCanvas(scr)});
+  new ResizeObserver(()=>{pd=sizeCanvas(pad);sd=sizeCanvas(scr)}).observe(document.querySelector('.col'));
+
+  const readEl=document.getElementById('read');
+  let last=performance.now(), nextDemoClick=2500;
+
+  function frame(now){
+    const dt=Math.min(0.05,(now-last)/1000); last=now;
+    const t=(now-t0)/1000;
+
+    // input
+    if(demo){
+      target.x=MAX*0.95*Math.sin(t*0.9);
+      target.z=MAX*0.95*Math.sin(t*1.35+0.6);
+      if(now-t0>nextDemoClick){doClick();nextDemoClick+=3200;}
+    } else if(!dragging){
+      const kx=(keys.ArrowRight?1:0)-(keys.ArrowLeft?1:0), kz=(keys.ArrowDown?1:0)-(keys.ArrowUp?1:0);
+      target.x=kx*MAX*0.8; target.z=kz*MAX*0.8;
+    }
+    const k=1-Math.pow(0.0005,dt);
+    off.x+=(target.x-off.x)*k; off.z+=(target.z-off.z)*k;
+
+    // sensors: pressure = projection of push onto segment normal
+    const mag=Math.hypot(off.x,off.z)/MAX;
+    segs.forEach(s=>{
+      const d=mag>0.001?(off.x*s.dir.x+off.z*s.dir.z)/(mag*MAX):0;
+      s.p=Math.max(0,d-0.35)/0.65*mag;
+      s.mat.emissiveIntensity=s.p*2.2;
+    });
+    const press=Math.max(0,1-(now-clickT)/250);
+    floorMat.emissiveIntensity=press*2;
+    ledMat.emissiveIntensity=0.4+press*2;
+
+    // finger pose: tip in well, knuckle rocks with it
+    const tipPos=new THREE.Vector3(off.x,TIP_Y-press*0.05,off.z);
+    const knuckle=new THREE.Vector3(off.x*4,7.5,4.2+off.z*3);
+    axis.subVectors(knuckle,tipPos).normalize();
+    finger.position.copy(tipPos);
+    finger.quaternion.setFromUnitVectors(up,axis);
+
+    // pointer: rate control with dead zone + quadratic curve. pad x→screen x, pad z (toward user)→screen down
+    const dz=0.08, m=Math.max(0,mag-dz)/(1-dz), speed=0.55*m*m;
+    if(mag>0.001){cur.x+=off.x/(mag*MAX)*speed*dt; cur.y+=off.z/(mag*MAX)*speed*dt*1.6;}
+    cur.x=Math.min(0.98,Math.max(0.01,cur.x)); cur.y=Math.min(0.94,Math.max(0.02,cur.y));
+    trail.push({x:cur.x,y:cur.y}); if(trail.length>90)trail.shift();
+
+    readEl.textContent=`Fx ${(off.x/MAX>=0?'+':'')}${(off.x/MAX).toFixed(2)} · Fy ${(-off.z/MAX>=0?'+':'')}${(-off.z/MAX).toFixed(2)}`;
+
+    controls.update();
+    renderer.render(scene,camera);
+    drawPad(); drawScreen();
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+
+</body></html>
